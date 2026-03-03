@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/tritrongnguyen/repo-reviewer.git/pkg/helper"
 )
 
 type healthResponse struct {
@@ -11,8 +12,7 @@ type healthResponse struct {
 
 func Health(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(healthResponse{
+	helper.RespondWithJson(w, 200, healthResponse{
 		Status: "ok",
 	})
 }

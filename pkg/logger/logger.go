@@ -1,11 +1,29 @@
 package logger
 
-import "log"
+import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
 
-func Info(msg string) {
-	log.Println("[INFO]", msg)
-}
+var Log *zap.Logger
 
-func Error(msg string) {
-	log.Println("[ERROR]", msg)
+func Init(dev bool) error {
+	var config zap.Config
+
+	if dev {
+		config = zap.NewDevelopmentConfig()
+		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	} else {
+		config = zap.NewProductionConfig()
+	}
+
+	logger, err := config.Build()
+
+	if err != nil {
+		return err
+	}
+
+	Log = logger
+
+	return nil
 }
