@@ -9,8 +9,16 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/tritrongnguyen/repo-reviewer.git/pkg/logger"
+	"go.uber.org/zap"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/joho/godotenv/autoload"
+
+	reporeviewer "github.com/tritrongnguyen/repo-reviewer.git"
 )
 
 type Service interface {
@@ -46,12 +54,15 @@ func New() Service {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Fatal("Error when connecting to postgres", zap.Error(err))
 	}
 
 	dbInstance = &service{
 		db: db,
 	}
+
+	dbInstance.runMigrations()
+
 	return dbInstance
 }
 
@@ -110,5 +121,28 @@ func (s *service) Health() map[string]string {
 // If an error occurs while closing the connection, it returns the error.
 func (s *service) Close() error {
 	log.Printf("Disconnected from database: %s", database)
-	return s.Close()
+	return s.db.Close()
+}
+
+func (s *service) runMigrations() {
+	d, err := iofs.New(reporeviewer.MigrationFiles, "migrations")
+	if err != nil {
+		logger.Log.Fatal("Error when init iods migration", zap.Error(err))
+	}
+
+	driver, err := postgres.WithInstance(s.db, &postgres.Config{})
+	if err != nil {
+		logger.Log.Fatal("Error when init migrate driver", zap.Error(err))
+	}
+
+	m, err := migrate.NewWithInstance("iofs", d, "postgres", driver)
+	if err != nil {
+		logger.Log.Fatal("Error when init migrate instance", zap.Error(err))
+	}
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		logger.Log.Fatal("Error when running migration", zap.Error(err))
+	}
+
+	logger.Log.Info("Database migration done successfully")
 }
