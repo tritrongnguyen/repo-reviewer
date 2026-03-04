@@ -1,10 +1,13 @@
-package handler
+package domain
+
+import "time"
 
 type User struct {
-	ID       int    `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"password,omitempty"`
-	Role     int    `json:"role:"`
+	ID           string    `json:"id"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"password,omitempty"`
+	Role         int       `json:"role:"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type UserProfile struct {
@@ -22,9 +25,3 @@ type UserDetails struct {
 	Profile UserProfile `json:"profile"`
 	Config  UserConfig  `json:"config"`
 }
-
-// func Register(db *sql.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request){
-
-// 	}
-// }

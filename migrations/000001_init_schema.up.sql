@@ -1,6 +1,6 @@
 -- 1. users
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role INTEGER DEFAULT 0, -- 0: User, 1: Admin, etc.
@@ -9,7 +9,7 @@ CREATE TABLE users (
 
 -- 2. user_profiles
 CREATE TABLE user_profiles (
-    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     full_name VARCHAR(100),
     phone VARCHAR(20),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -17,8 +17,17 @@ CREATE TABLE user_profiles (
 
 -- 3. user_configs
 CREATE TABLE user_configs (
-    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     api_key VARCHAR(100) UNIQUE
+);
+
+-- 4. Sessions
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    -- token VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 -- (Tùy chọn) Hàm và Trigger để tự động update thời gian cho profile
